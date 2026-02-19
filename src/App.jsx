@@ -7,13 +7,16 @@ import EmailPage from './pages/EmailPage'
 import SettingsPage from './pages/SettingsPage'
 import BottomNav from './components/navigation/BottomNav'
 
+import { getWidgetConfig } from './hooks/useWidgetConfig'
+
 // detect if running inside the widget iframe
-const isEmbedded = window !== window.parent
+const isEmbedded = window.self !== window.top
 
 // check if current URL path is /setting
 const isSettingRoute = window.location.pathname === '/setting'
 
 function App() {
+  const cfg = getWidgetConfig()
   const [activePage, setActivePage] = useState('home')
 
   // listen for postMessage from widget.js when embedded
@@ -50,8 +53,11 @@ function App() {
     <div className="h-screen flex flex-col font-sans overflow-hidden bg-white">
       {/* Top brand bar — hidden when inside widget iframe */}
       {!isEmbedded && (
-        <div className="shrink-0 px-4 py-3 bg-green-800 text-white">
-          <span className="font-semibold text-sm">Holper's Pest &amp; Animal Solutions</span>
+        <div 
+          style={{ background: cfg.colorPrimary, color: cfg.colorText }}
+          className="shrink-0 px-4 py-3"
+        >
+          <span className="font-semibold text-sm">{cfg.title}</span>
         </div>
       )}
 

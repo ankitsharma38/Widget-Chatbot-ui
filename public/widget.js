@@ -178,6 +178,7 @@
   document.head.appendChild(style)
 
   // ── DOM ────────────────────────────────────────────────────────────────────
+  var activeKey = null
   var wrap = document.createElement('div')
   wrap.className = '_hpas_wrap'
 
@@ -237,8 +238,6 @@
 
   var nav = document.createElement('div')
   nav.className = '_hpas_nav'
-
-  var activeKey = null
 
   navItems.forEach(function (item) {
     var btn = document.createElement('button')

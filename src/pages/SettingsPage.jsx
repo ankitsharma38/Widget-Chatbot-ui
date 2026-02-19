@@ -76,9 +76,9 @@ function generateScript(cfg) {
     `  data-header-fs="${cfg.headerFontSize || 13}"`,
     `  data-btn-text="${cfg.btnText || 'Submit'}"`,
     `  data-btn-fs="${cfg.btnFontSize || 13}"`,
-    `  data-btn-radius="${cfg.btnRadius || 9}"`,
-    `  data-chat-bg="${cfg.colorChatBg || '#f3f4f6'}"`,
-    `  data-form-bg="${cfg.colorFormBg || '#ffffff'}"`,
+    `  data-btn-radius="${cfg.btnRadius || DEFAULT_CONFIG.btnRadius}"`,
+    `  data-chat-bg="${cfg.colorChatBg || DEFAULT_CONFIG.colorChatBg}"`,
+    `  data-form-bg="${cfg.colorFormBg || DEFAULT_CONFIG.colorFormBg}"`,
     `  data-tabs="${enabledTabKeys.join(',')}"`,
   ]
   if (labelsChanged) {
@@ -179,8 +179,8 @@ function WidgetPreview({ cfg }) {
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
-      <div style={{ transform: `scale(${previewScale})`, transformOrigin: 'top center', width: cfg.width, marginBottom: open ? Math.round(cfg.height * previewScale - cfg.height + 12) : 8 }}>
+    <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+      <div style={{ transform: `scale(${previewScale})`, transformOrigin: 'bottom center', width: cfg.width }}>
         {/* Panel */}
         <div style={{ width: cfg.width, overflow: 'hidden', borderRadius: 16, boxShadow: open ? '0 8px 40px rgba(0,0,0,0.20)' : 'none', border: open ? '1px solid #d1d5db' : '1px solid transparent', maxHeight: open ? cfg.height + 20 : 0, opacity: open ? 1 : 0, marginBottom: open ? 10 : 0, pointerEvents: open ? 'auto' : 'none', transition: 'max-height 0.38s cubic-bezier(0.4,0,0.2,1), opacity 0.32s ease, margin-bottom 0.38s cubic-bezier(0.4,0,0.2,1)' }}>
           <div style={{ width: cfg.width, height: cfg.height, display: 'flex', flexDirection: 'column' }}>
@@ -560,10 +560,10 @@ export default function SettingsPage() {
       </div>
 
       {/* ── Two-column body ── */}
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 420px', gridTemplateRows: '1fr', overflow: 'hidden' }}>
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '580px 480px 1fr', gridTemplateRows: '1fr', overflow: 'hidden' }}>
 
         {/* ── LEFT: Scrollable settings ── */}
-        <div style={{ overflowY: 'auto', overflowX: 'hidden', padding: '22px 20px 30px 24px', display: 'flex', flexDirection: 'column', gap: 16, scrollbarWidth: 'thin', scrollbarColor: '#d1d5db transparent', boxSizing: 'border-box' }}>
+        <div style={{ overflowY: 'auto', overflowX: 'hidden', padding: '22px 20px 30px 24px', display: 'flex', flexDirection: 'column', gap: 16, scrollbarWidth: 'thin', scrollbarColor: '#d1d5db transparent', boxSizing: 'border-box', borderRight: '1px solid #e5e7eb' }}>
 
           {/* Branding */}
           <Section icon={<Palette size={14} />} title="Branding">
@@ -667,35 +667,52 @@ export default function SettingsPage() {
 
         </div>
 
-        {/* ── RIGHT: Preview + Embed Script ── */}
-        <div style={{ borderLeft: '1px solid #e5e7eb', background: '#f1f5f9', overflowY: 'auto', overflowX: 'hidden', height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 0, scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent', boxSizing: 'border-box' }}>
+        {/* ── MIDDLE: Embed Script ── */}
+        <div style={{ padding: '22px 20px', background: '#f8fafc', borderRight: '1px solid #e5e7eb', overflowY: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+            <Code2 size={13} color="#6b7280" />
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#374151', letterSpacing: '0.02em', textTransform: 'uppercase' }}>Integration</span>
+          </div>
+          <EmbedScriptPanel cfg={cfg} savedCfg={savedCfg} hasSaved={hasSaved} />
+          
+          {!hasSaved && (
+              <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 6, padding: '12px 16px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12 }}>
+                <span style={{ fontSize: 16 }}>💡</span>
+                <span style={{ fontSize: 12, color: '#92400e', lineHeight: 1.5 }}>
+                  Press <strong>Save Settings</strong> at the top to generate your custom embed script.
+                </span>
+              </div>
+          )}
 
-          {/* Preview section header */}
-          <div style={{ padding: '16px 18px 0', flexShrink: 0 }}>
+          <div style={{ marginTop: 24, padding: '16px', background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: 16 }}>
+            <h4 style={{ fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Next Steps</h4>
+            <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: '#6b7280', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <li>Copy the script above.</li>
+              <li>Paste it before the closing &lt;/body&gt; tag.</li>
+              <li>The widget will appear instantly on your site.</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* ── RIGHT: Live Preview ── */}
+        <div style={{ background: '#f1f5f9', overflowY: 'auto', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+          
+          <div style={{ padding: '22px 20px 0', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
               <Eye size={13} color="#6b7280" />
               <span style={{ fontSize: 12, fontWeight: 700, color: '#374151', letterSpacing: '0.02em', textTransform: 'uppercase' }}>Live Preview</span>
-              <span style={{ marginLeft: 'auto', fontSize: 10, color: '#9ca3af', background: '#e5e7eb', borderRadius: 20, padding: '2px 8px' }}>Click tabs to interact</span>
+              <span style={{ marginLeft: 'auto', fontSize: 10, color: '#9ca3af', background: '#e5e7eb', borderRadius: 20, padding: '2px 8px' }}>Interactive</span>
             </div>
 
-            {/* Preview card */}
-            <div style={{ background: 'linear-gradient(135deg,#e0f2fe 0%,#e0e7ff 100%)', borderRadius: 16, padding: '20px 16px 16px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', minHeight: 200, border: '1px solid #bfdbfe', overflow: 'hidden' }}>
+            <div style={{ background: 'linear-gradient(135deg,#e0f2fe 0%,#e0e7ff 100%)', borderRadius: 20, padding: '30px 20px', display: 'flex', justifyContent: 'center', alignItems: 'flex-end', minHeight: 'calc(100vh - 160px)', border: '1px solid #bfdbfe', overflow: 'hidden' }}>
               <WidgetPreview cfg={cfg} />
             </div>
           </div>
 
-          {/* Embed Script section */}
-          <div style={{ padding: '16px 18px 24px', flexShrink: 0 }}>
-            <EmbedScriptPanel cfg={cfg} savedCfg={savedCfg} hasSaved={hasSaved} />
-
-            {!hasSaved && (
-              <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10 }}>
-                <span style={{ fontSize: 14 }}>💡</span>
-                <span style={{ fontSize: 11, color: '#92400e', lineHeight: 1.4 }}>
-                  Press <strong>Save Settings</strong> above to generate your embed script.
-                </span>
-              </div>
-            )}
+          <div style={{ padding: '12px 20px 30px', textAlign: 'center' }}>
+             <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>
+                This is a live representation of how the widget will look on your website.
+             </p>
           </div>
 
         </div>
