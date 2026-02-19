@@ -74,11 +74,6 @@ function generateScript(cfg) {
     `  data-right="${cfg.right}"`,
     `  data-header-height="${cfg.headerHeight || 44}"`,
     `  data-header-fs="${cfg.headerFontSize || 13}"`,
-    `  data-btn-text="${cfg.btnText || 'Submit'}"`,
-    `  data-btn-fs="${cfg.btnFontSize || 13}"`,
-    `  data-btn-radius="${cfg.btnRadius || DEFAULT_CONFIG.btnRadius}"`,
-    `  data-chat-bg="${cfg.colorChatBg || DEFAULT_CONFIG.colorChatBg}"`,
-    `  data-form-bg="${cfg.colorFormBg || DEFAULT_CONFIG.colorFormBg}"`,
     `  data-tabs="${enabledTabKeys.join(',')}"`,
   ]
   if (labelsChanged) {
@@ -585,9 +580,6 @@ export default function SettingsPage() {
             <div style={{ height: 1, background: '#f0f0f0', margin: '2px 0' }} />
             <ColorRow label="Internal Header Background" value={cfg.colorSubHeaderBg || cfg.colorPrimary} onChange={v => update({ colorSubHeaderBg: v })} />
             <ColorRow label="Text Color"          value={cfg.colorText}    onChange={v => update({ colorText: v })} />
-            <div style={{ height: 1, background: '#f0f0f0', margin: '2px 0' }} />
-            <ColorRow label="Chat Background"     value={cfg.colorChatBg  || '#f3f4f6'} onChange={v => update({ colorChatBg: v })} />
-            <ColorRow label="Form Page Background" value={cfg.colorFormBg || '#ffffff'} onChange={v => update({ colorFormBg: v })} />
           </Section>
 
           {/* Header Style */}
@@ -596,14 +588,7 @@ export default function SettingsPage() {
             <SliderField label="Title Font Size"  value={cfg.headerFontSize || 13} onChange={v => update({ headerFontSize: v })} min={10} max={22} unit="px" />
           </Section>
 
-          {/* Button Style */}
-          <Section icon={<Check size={14} />} title="Submit Button Style">
-            <Field label="Button Text">
-              <TextInput value={cfg.btnText || 'Submit'} onChange={v => update({ btnText: v })} placeholder="Submit" />
-            </Field>
-            <SliderField label="Font Size"     value={cfg.btnFontSize || 13} onChange={v => update({ btnFontSize: v })} min={10} max={18} unit="px" />
-            <SliderField label="Border Radius" value={cfg.btnRadius   || 9}  onChange={v => update({ btnRadius: v })}   min={0}  max={28} unit="px" />
-          </Section>
+
 
           {/* Size & Position — sliders */}
           <Section icon={<Layout size={14} />} title="Size & Position">
