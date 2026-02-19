@@ -1,34 +1,54 @@
 import React from 'react'
 import ReactMarkdown from 'react-markdown'
+import { getWidgetConfig } from '../../hooks/useWidgetConfig'
 
 const MessageItem = ({ message }) => {
   const isUser = message.role === 'user'
+  const cfg = getWidgetConfig()
 
   return (
-    <div className={`flex w-full mb-8 ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className="max-w-[85%]">
+    <div className={`flex w-full mb-6 ${isUser ? 'justify-end' : 'justify-start'}`}>
+      <div className="max-w-[90%] sm:max-w-[85%]">
         <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
           <div
-            className={`px-4 py-3 rounded-2xl ${
-              isUser
-                ? 'bg-blue-600 text-white rounded-tr-none'
-                : 'bg-slate-50 border border-slate-200 text-slate-800 rounded-tl-none shadow-sm'
-            }`}
+            style={{
+              padding: '10px 14px',
+              borderRadius: '16px',
+              fontSize: '14px',
+              lineHeight: '1.5',
+              background: isUser ? cfg.colorPrimary : '#ffffff',
+              color: isUser ? cfg.colorText : '#1f2937',
+              border: isUser ? 'none' : '1px solid #e5e7eb',
+              borderTopRightRadius: isUser ? '2px' : '16px',
+              borderTopLeftRadius: isUser ? '16px' : '2px',
+              boxShadow: isUser ? `0 2px 8px ${cfg.colorPrimary}33` : '0 1px 2px rgba(0,0,0,0.05)'
+            }}
           >
             {isUser ? (
-              <p className="whitespace-pre-wrap leading-relaxed text-sm">{message.content}</p>
+              <p className="whitespace-pre-wrap m-0">{message.content}</p>
             ) : (
-              <div className="prose prose-sm max-w-none prose-p:leading-relaxed prose-headings:text-slate-900 prose-p:text-slate-800 prose-strong:text-slate-900 prose-li:text-slate-800 prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-pre:border prose-pre:border-slate-700 prose-code:text-indigo-700">
+              <div className="prose prose-sm max-w-none text-inherit">
                 <ReactMarkdown
                   components={{
-                    h1: (props) => <h1 className="text-xl font-bold mb-2 mt-4" {...props} />,
-                    h2: (props) => <h2 className="text-lg font-bold mb-2 mt-3" {...props} />,
+                    h1: (props) => <h1 style={{fontSize: '1.1rem', fontWeight: 700, margin: '1em 0 0.5em'}} {...props} />,
+                    h2: (props) => <h2 style={{fontSize: '1rem', fontWeight: 700, margin: '1em 0 0.5em'}} {...props} />,
+                    p:  (props) => <p style={{margin: '0.4em 0', lineHeight: 1.5}} {...props} />,
                     code: ({ inline, ...props }) =>
                       inline ? (
-                        <code className="bg-indigo-50 px-1 py-0.5 rounded text-xs text-indigo-700" {...props} />
+                        <code style={{ background: 'rgba(0,0,0,0.05)', padding: '2px 4px', borderRadius: '4px', fontSize: '0.85em', color: cfg.colorPrimary }} {...props} />
                       ) : (
                         <code
-                          className="block bg-slate-900 p-3 rounded-lg my-2 text-xs font-mono overflow-x-auto border border-slate-700 text-slate-100"
+                          style={{
+                            display: 'block',
+                            background: '#111827',
+                            padding: '12px',
+                            borderRadius: '8px',
+                            margin: '8px 0',
+                            fontSize: '0.85em',
+                            fontFamily: 'monospace',
+                            overflowX: 'auto',
+                            color: '#f3f4f6'
+                          }}
                           {...props}
                         />
                       ),

@@ -1,8 +1,10 @@
 import React, { useRef, useEffect } from 'react'
 import { Send, Square } from 'lucide-react'
+import { getWidgetConfig } from '../../hooks/useWidgetConfig'
 
 const MessageInput = ({ input, setInput, onSendMessage, isLoading, onStopGeneration, threadId }) => {
   const textareaRef = useRef(null)
+  const cfg = getWidgetConfig()
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -32,11 +34,22 @@ const MessageInput = ({ input, setInput, onSendMessage, isLoading, onStopGenerat
   }
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="p-4 sm:p-5">
       <div className="max-w-4xl mx-auto">
         <form
           onSubmit={handleSubmit}
-          className="relative bg-white border border-gray-300 rounded-2xl shadow-sm focus-within:border-blue-500/50 transition-all duration-200"
+          style={{ 
+            borderColor: '#e5e7eb',
+            background: '#fff',
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderRadius: '16px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+          onFocusCapture={(e) => { e.currentTarget.style.borderColor = cfg.colorPrimary; e.currentTarget.style.boxShadow = `0 0 0 1px ${cfg.colorPrimary}44` }}
+          onBlurCapture={(e) => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)' }}
         >
           <textarea
             ref={textareaRef}
@@ -45,16 +58,42 @@ const MessageInput = ({ input, setInput, onSendMessage, isLoading, onStopGenerat
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type your message..."
-            className="w-full bg-transparent text-gray-900 placeholder-gray-500 py-[18px] pl-4 pr-16 resize-none focus:outline-none text-sm min-h-[56px] max-h-[200px] leading-relaxed overflow-hidden"
+            style={{
+              width: '100%',
+              background: 'transparent',
+              color: '#111827',
+              paddingTop: '16px',
+              paddingBottom: '16px',
+              paddingLeft: '16px',
+              paddingRight: '60px',
+              resize: 'none',
+              outline: 'none',
+              fontSize: '14px',
+              minHeight: '56px',
+              maxHeight: '200px',
+              lineHeight: '1.5',
+              border: 'none',
+              fontFamily: 'inherit'
+            }}
             disabled={isLoading}
           />
 
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+          <div style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             {isLoading ? (
               <button
                 type="button"
                 onClick={onStopGeneration}
-                className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-all duration-200"
+                style={{
+                  padding: '8px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  color: '#ef4444',
+                  borderRadius: '12px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
                 title="Stop generation"
               >
                 <Square size={18} fill="currentColor" />
@@ -63,7 +102,18 @@ const MessageInput = ({ input, setInput, onSendMessage, isLoading, onStopGenerat
               <button
                 type="submit"
                 disabled={!input.trim()}
-                className="p-2.5 bg-blue-600 text-white hover:bg-blue-500 disabled:bg-gray-200 disabled:text-gray-500 rounded-xl transition-all duration-200"
+                style={{
+                  padding: '10px',
+                  background: !input.trim() ? '#f3f4f6' : cfg.colorPrimary,
+                  color: !input.trim() ? '#9ca3af' : cfg.colorText,
+                  borderRadius: '12px',
+                  border: 'none',
+                  cursor: !input.trim() ? 'default' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s'
+                }}
               >
                 <Send size={18} />
               </button>

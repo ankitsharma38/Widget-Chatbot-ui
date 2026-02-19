@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import Header from '../components/chatbot/Header'
 import MessageList from '../components/chatbot/MessageList'
 import MessageInput from '../components/chatbot/MessageInput'
+import { getWidgetConfig } from '../hooks/useWidgetConfig'
 
 const ChatPage = () => {
   const [threadId, setThreadId] = useState(() => sessionStorage.getItem('currentThreadId') || null)
@@ -114,9 +115,11 @@ const ChatPage = () => {
     }
   }
 
+  const cfg = getWidgetConfig()
+
   return (
     <div className="flex h-full overflow-hidden">
-      <main className="flex-1 flex flex-col bg-gradient-to-b from-white to-gray-100">
+      <main className="flex-1 flex flex-col" style={{ background: cfg.colorChatBg || '#f3f4f6' }}>
         <Header onReset={resetConversation} />
 
         <MessageList messages={messages} isLoading={isLoading} />

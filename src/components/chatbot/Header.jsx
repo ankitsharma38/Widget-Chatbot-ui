@@ -1,16 +1,57 @@
 import React from 'react'
 import { SquarePen } from 'lucide-react'
+import { getWidgetConfig } from '../../hooks/useWidgetConfig'
 
 const Header = ({ onReset }) => {
+  const cfg = getWidgetConfig()
+  
   return (
-    <header className="h-14 flex items-center justify-between px-4 bg-white border-b border-gray-200 shrink-0">
-      <h1 className="text-base font-semibold text-gray-900">AI Assistant</h1>
+    <header 
+      style={{ 
+        height: cfg.headerHeight,
+        background: cfg.colorSubHeaderBg || cfg.colorPrimary,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 16px',
+        flexShrink: 0
+      }}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <h1 style={{ 
+          margin: 0, 
+          fontSize: cfg.headerFontSize, 
+          fontWeight: 700, 
+          color: cfg.colorText || '#fff'
+        }}>
+          AI Assistant
+        </h1>
+        <p style={{ margin: '1px 0 0', fontSize: 10, color: `${cfg.colorText || '#fff'}cc` }}>
+          Online & Ready to Help
+        </p>
+      </div>
       <button
         onClick={onReset}
         title="New conversation"
-        className="p-2 text-gray-500 hover:text-green-700 hover:bg-gray-100 rounded-lg transition-colors"
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          color: cfg.colorText || '#fff',
+          padding: '8px',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          transition: 'all 0.2s'
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.background = 'rgba(255,255,255,0.15)'
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background = 'none'
+        }}
       >
-        <SquarePen size={16} />
+        <SquarePen size={18} />
       </button>
     </header>
   )

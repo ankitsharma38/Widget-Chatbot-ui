@@ -1,12 +1,37 @@
 (function () {
-  // ── Config ─────────────────────────────────────────────────────────────────
+  // ── Config from data-* attributes ─────────────────────────────────────────
   var scriptTag = document.currentScript || (function () {
     var s = document.getElementsByTagName('script')
     return s[s.length - 1]
   })()
-  var WIDGET_URL = scriptTag.getAttribute('data-url') || 'http://localhost:5173'
-  var BOTTOM = '24px'
-  var RIGHT  = '24px'
+
+  var WIDGET_URL    = scriptTag.getAttribute('data-url')         || 'http://localhost:5173'
+  var COLOR_PRIMARY = scriptTag.getAttribute('data-color')        || '#166534'
+  var COLOR_DARK    = scriptTag.getAttribute('data-color-dark')   || '#14532d'
+  var SUB_HEADER_BG = scriptTag.getAttribute('data-sub-header-bg') || COLOR_PRIMARY
+  var COLOR_TEXT    = scriptTag.getAttribute('data-text-color')   || '#ffffff'
+  var TITLE         = scriptTag.getAttribute('data-title')        || "Holper's Pest & Animal Solutions"
+  var PANEL_WIDTH   = parseInt(scriptTag.getAttribute('data-width'),  10) || 400
+  var PANEL_HEIGHT  = parseInt(scriptTag.getAttribute('data-height'), 10) || 580
+  var BOTTOM        = scriptTag.getAttribute('data-bottom')       || '24px'
+  var RIGHT         = scriptTag.getAttribute('data-right')        || '24px'
+  
+  // New customization attributes
+  var HEADER_HEIGHT = scriptTag.getAttribute('data-header-height') || '44'
+  var HEADER_FS     = scriptTag.getAttribute('data-header-fs')     || '13'
+  var BTN_TEXT      = scriptTag.getAttribute('data-btn-text')      || 'Submit'
+  var BTN_FS        = scriptTag.getAttribute('data-btn-fs')        || '13'
+  var BTN_RADIUS    = scriptTag.getAttribute('data-btn-radius')    || '9'
+  var CHAT_BG       = scriptTag.getAttribute('data-chat-bg')       || '#f3f4f6'
+  var FORM_BG       = scriptTag.getAttribute('data-form-bg')       || '#ffffff'
+
+  // which tabs to show (comma-separated keys)
+  var TAB_KEYS_RAW  = scriptTag.getAttribute('data-tabs') || 'chat,call,text,email'
+  var ENABLED_TABS  = TAB_KEYS_RAW.split(',').map(function(s){ return s.trim() }).filter(Boolean)
+
+  // custom tab labels (comma-separated, same order as data-tabs)
+  var TAB_LABELS_RAW = scriptTag.getAttribute('data-tab-labels') || ''
+  var customLabels   = TAB_LABELS_RAW ? TAB_LABELS_RAW.split(',').map(function(s){ return s.trim() }) : []
 
   // ── Inline SVGs ────────────────────────────────────────────────────────────
   var icons = {
@@ -17,12 +42,24 @@
     close: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
   }
 
-  var navItems = [
+  // build navItems from enabled tabs, apply custom labels
+  var allTabDefs = [
     { key: 'chat',  label: 'Chat'  },
     { key: 'call',  label: 'Call'  },
     { key: 'text',  label: 'Text'  },
     { key: 'email', label: 'Email' },
   ]
+  var navItems = []
+  ENABLED_TABS.forEach(function(key, idx) {
+    var def = allTabDefs.find(function(d){ return d.key === key })
+    if (!def) return
+    navItems.push({
+      key:   key,
+      label: (customLabels[idx] && customLabels[idx].length) ? customLabels[idx] : def.label
+    })
+  })
+
+  var colCount = navItems.length || 1
 
   // ── Styles ─────────────────────────────────────────────────────────────────
   var style = document.createElement('style')
@@ -38,9 +75,8 @@
     '  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;',
     '}',
 
-    /* outer clipping wrapper — animates max-height for smooth slide */
     '._hpas_panel_outer {',
-    '  width: 400px;',
+    '  width: ' + PANEL_WIDTH + 'px;',
     '  overflow: hidden;',
     '  border-radius: 16px;',
     '  box-shadow: 0 8px 40px rgba(0,0,0,0.20);',
@@ -58,33 +94,32 @@
     '  box-shadow: none;',
     '}',
     '._hpas_panel_outer._open {',
-    '  max-height: 600px;',
+    '  max-height: ' + (PANEL_HEIGHT + 20) + 'px;',
     '  opacity: 1;',
     '  pointer-events: auto;',
     '  margin-bottom: 10px;',
     '}',
 
-    /* inner panel — flex column */
     '._hpas_panel {',
-    '  width: 400px;',
-    '  height: 580px;',
+    '  width: ' + PANEL_WIDTH + 'px;',
+    '  height: ' + PANEL_HEIGHT + 'px;',
     '  display: flex;',
     '  flex-direction: column;',
     '  background: #fff;',
     '}',
 
-    /* header bar inside panel */
     '._hpas_header {',
     '  display: flex;',
     '  align-items: center;',
     '  justify-content: space-between;',
-    '  padding: 10px 14px;',
-    '  background: #166534;',
-    '  color: white;',
+    '  padding: 0 14px;',
+    '  height: ' + HEADER_HEIGHT + 'px;',
+    '  background: ' + COLOR_PRIMARY + ';',
+    '  color: ' + COLOR_TEXT + ';',
     '  flex-shrink: 0;',
     '}',
     '._hpas_header_title {',
-    '  font-size: 13px;',
+    '  font-size: ' + HEADER_FS + 'px;',
     '  font-weight: 600;',
     '  letter-spacing: 0.01em;',
     '}',
@@ -92,7 +127,7 @@
     '  background: none;',
     '  border: none;',
     '  cursor: pointer;',
-    '  color: white;',
+    '  color: ' + COLOR_TEXT + ';',
     '  padding: 4px;',
     '  border-radius: 6px;',
     '  display: flex;',
@@ -111,12 +146,12 @@
 
     '._hpas_nav {',
     '  display: grid;',
-    '  grid-template-columns: repeat(4, 1fr);',
-    '  width: 400px;',
+    '  grid-template-columns: repeat(' + colCount + ', 1fr);',
+    '  width: ' + PANEL_WIDTH + 'px;',
     '  border-radius: 14px;',
     '  overflow: hidden;',
     '  box-shadow: 0 4px 20px rgba(0,0,0,0.18);',
-    '  border: 1px solid #14532d;',
+    '  border: 1px solid ' + COLOR_DARK + ';',
     '}',
 
     '._hpas_nav_btn {',
@@ -126,19 +161,19 @@
     '  justify-content: center;',
     '  gap: 4px;',
     '  padding: 10px 0;',
-    '  background: #166534;',
+    '  background: ' + COLOR_PRIMARY + ';',
     '  border: none;',
     '  cursor: pointer;',
-    '  color: white;',
+    '  color: ' + COLOR_TEXT + ';',
     '  font-size: 11px;',
     '  font-weight: 500;',
     '  font-family: inherit;',
     '  transition: background 0.18s;',
-    '  border-right: 1px solid #14532d;',
+    '  border-right: 1px solid ' + COLOR_DARK + ';',
     '}',
     '._hpas_nav_btn:last-child { border-right: none; }',
-    '._hpas_nav_btn:hover { background: #14532d; }',
-    '._hpas_nav_btn._active { background: #14532d; }',
+    '._hpas_nav_btn:hover { background: ' + COLOR_DARK + '; }',
+    '._hpas_nav_btn._active { background: ' + COLOR_DARK + '; }',
   ].join('\n')
   document.head.appendChild(style)
 
@@ -146,21 +181,18 @@
   var wrap = document.createElement('div')
   wrap.className = '_hpas_wrap'
 
-  // Outer animated wrapper
   var panelOuter = document.createElement('div')
   panelOuter.className = '_hpas_panel_outer _closed'
 
-  // Inner panel
   var panel = document.createElement('div')
   panel.className = '_hpas_panel'
 
-  // Header bar with title + close button
   var header = document.createElement('div')
   header.className = '_hpas_header'
 
   var headerTitle = document.createElement('span')
   headerTitle.className = '_hpas_header_title'
-  headerTitle.textContent = "Holper's Pest & Animal Solutions"
+  headerTitle.textContent = TITLE
 
   var closeBtn = document.createElement('button')
   closeBtn.className = '_hpas_close_btn'
@@ -180,14 +212,29 @@
 
   var iframe = document.createElement('iframe')
   iframe.className = '_hpas_iframe'
-  iframe.src = WIDGET_URL
+  
+  // Construct URL with query params for the app to consume
+  var params = new URLSearchParams({
+    colorPrimary: COLOR_PRIMARY,
+    colorDark:    COLOR_DARK,
+    colorSubHeaderBg: SUB_HEADER_BG,
+    colorText:    COLOR_TEXT,
+    headerHeight: HEADER_HEIGHT,
+    headerFontSize: HEADER_FS,
+    btnText:      BTN_TEXT,
+    btnFontSize:  BTN_FS,
+    btnRadius:    BTN_RADIUS,
+    colorChatBg:  CHAT_BG,
+    colorFormBg:  FORM_BG
+  })
+  iframe.src = WIDGET_URL + (WIDGET_URL.indexOf('?') === -1 ? '?' : '&') + params.toString()
+  
   iframe.setAttribute('allow', 'microphone')
   iframe.setAttribute('title', 'Support Widget')
   panel.appendChild(iframe)
 
   panelOuter.appendChild(panel)
 
-  // Nav bar with 4 buttons
   var nav = document.createElement('div')
   nav.className = '_hpas_nav'
 
