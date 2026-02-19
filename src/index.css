@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#0d0d0d] text-gray-200 antialiased;
+    font-feature-settings: "cv02", "cv05", "cv11";
+  }
+}
+
+/* Custom Scrollbar */
+@layer components {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-800 rounded-full hover:bg-gray-700 transition-colors;
+  }
+}
+
+/* Markdown prose overrides for better spacing */
+.prose {
+  @apply text-gray-800;
+}
+
+.prose p {
+  @apply mb-4 leading-relaxed;
+}
+
+.prose pre {
+  @apply bg-gray-950/50 border border-gray-800 rounded-xl my-4;
+}
+
+.prose code {
+  @apply font-mono text-sm;
+}
