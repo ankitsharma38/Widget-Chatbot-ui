@@ -69,8 +69,7 @@ const ChatPage = () => {
       const decoder = new TextDecoder()
       let botResponse = ''
       let displayedLength = 0
-
-      setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
+      let hasStartedText = false
 
       while (true) {
         const { done, value } = await reader.read()
@@ -80,25 +79,53 @@ const ChatPage = () => {
         const lines = chunk.split('\n')
 
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = JSON.parse(line.slice(6))
+          const trimmedLine = line.trim()
+          if (trimmedLine.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(trimmedLine.slice(6))
 
-            if (data.thread_id && !threadId) setThreadId(data.thread_id)
+              if (data.thread_id && !threadId) setThreadId(data.thread_id)
 
-            if (data.content) {
-              botResponse += data.content
-
-              while (displayedLength < botResponse.length) {
-                if (abortControllerRef.current.signal.aborted) break
-                displayedLength++
-                const displayText = botResponse.substring(0, displayedLength)
-                setMessages((prev) => {
-                  const updated = [...prev]
-                  updated[updated.length - 1] = { role: 'assistant', content: displayText }
-                  return updated
-                })
-                await new Promise((resolve) => setTimeout(resolve, 5))
+              // Handle metadata/heartbeats - keep loading dots visible, but show no text
+              if (data.heartbeat) {
+                continue
               }
+
+              if (data.content) {
+                if (!hasStartedText) {
+                  hasStartedText = true
+                  setIsLoading(false) // Hide the three-dot loader
+                  botResponse = data.content
+                  // Add the assistant bubble only when we have actual text
+                  setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
+                } else {
+                  botResponse += data.content
+                }
+
+                while (displayedLength < botResponse.length) {
+                  if (abortControllerRef.current?.signal.aborted) break
+                  displayedLength++
+                  const displayText = botResponse.substring(0, displayedLength)
+                  
+                  setMessages((prev) => {
+                    const updated = [...prev]
+                    const last = updated[updated.length - 1]
+                    if (last && last.role === 'assistant') {
+                      updated[updated.length - 1] = { ...last, content: displayText }
+                    }
+                    return updated
+                  })
+                  
+                  // Keep it smooth
+                  if (botResponse.length - displayedLength > 50) {
+                      displayedLength = botResponse.length 
+                  } else {
+                      await new Promise((resolve) => setTimeout(resolve, 10))
+                  }
+                }
+              }
+            } catch (e) {
+              // Ignore partial JSON
             }
           }
         }
@@ -107,11 +134,19 @@ const ChatPage = () => {
       setIsLoading(false)
     } catch (error) {
       if (error.name !== 'AbortError') {
-        console.error('Error:', error)
-        setMessages((prev) => [
-          ...prev,
-          { role: 'assistant', content: 'Error connecting to server. Make sure backend is running.' },
-        ])
+        console.error('Connection Error:', error)
+        setMessages((prev) => {
+          const updated = [...prev]
+          const lastMsg = updated[updated.length - 1]
+          if (lastMsg && lastMsg.role === 'assistant') {
+            if (!(hasStartedText && lastMsg.content.length > 10)) {
+               updated[updated.length - 1] = { role: 'assistant', content: '⚠️ Connection lost. Please try again.' }
+            }
+          } else if (!hasStartedText) {
+             updated.push({ role: 'assistant', content: '⚠️ Connection error. Please check if the backend is running.' })
+          }
+          return updated
+        })
       }
       setIsLoading(false)
     }
