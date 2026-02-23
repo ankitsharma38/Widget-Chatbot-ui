@@ -53,12 +53,14 @@ const ChatPage = () => {
     abortControllerRef.current = new AbortController()
 
     try {
+      const cfg = getWidgetConfig()
       const response = await fetch('http://localhost:8000/api/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [...messages, userMessage],
           thread_id: threadId,
+          company: cfg.company || 'woyce'
         }),
         signal: abortControllerRef.current.signal,
       })

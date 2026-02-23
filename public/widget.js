@@ -24,6 +24,7 @@
   var BTN_RADIUS    = scriptTag.getAttribute('data-btn-radius')    || '9'
   var CHAT_BG       = scriptTag.getAttribute('data-chat-bg')       || '#f3f4f6'
   var FORM_BG       = scriptTag.getAttribute('data-form-bg')       || '#ffffff'
+  var COMPANY       = scriptTag.getAttribute('data-company')       || 'woyce'
 
   // which tabs to show (comma-separated keys)
   var TAB_KEYS_RAW  = scriptTag.getAttribute('data-tabs') || 'chat,call,text,email'
@@ -226,7 +227,8 @@
     btnFontSize:  BTN_FS,
     btnRadius:    BTN_RADIUS,
     colorChatBg:  CHAT_BG,
-    colorFormBg:  FORM_BG
+    colorFormBg:  FORM_BG,
+    company:      COMPANY
   })
   iframe.src = WIDGET_URL + (WIDGET_URL.indexOf('?') === -1 ? '?' : '&') + params.toString()
   

@@ -18,6 +18,7 @@ const DEFAULTS = {
   btnText:        'Submit',
   btnFontSize:    13,
   btnRadius:      9,
+  company:        'woyce',
 }
 
 export function getWidgetConfig() {
@@ -37,6 +38,7 @@ export function getWidgetConfig() {
       btnText:        urlParams.get('btnText')        || DEFAULTS.btnText,
       btnFontSize:    Number(urlParams.get('btnFontSize'))    || DEFAULTS.btnFontSize,
       btnRadius:      Number(urlParams.get('btnRadius'))      || DEFAULTS.btnRadius,
+      company:        urlParams.get('company')        || DEFAULTS.company,
     }
   }
 

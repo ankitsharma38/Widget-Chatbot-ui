@@ -43,7 +43,8 @@ const DEFAULT_CONFIG = {
     call:  { enabled: true,  label: 'Call'  },
     text:  { enabled: true,  label: 'Text'  },
     email: { enabled: true,  label: 'Email' },
-  }
+  },
+  company: 'woyce'
 }
 
 function loadConfig() {
@@ -74,6 +75,7 @@ function generateScript(cfg) {
     `  data-right="${cfg.right}"`,
     `  data-header-height="${cfg.headerHeight || 44}"`,
     `  data-header-fs="${cfg.headerFontSize || 13}"`,
+    `  data-company="${cfg.company || 'woyce'}"`,
     `  data-tabs="${enabledTabKeys.join(',')}"`,
   ]
   if (labelsChanged) {
@@ -592,6 +594,32 @@ export default function SettingsPage() {
 
           {/* Size & Position — sliders */}
           <Section icon={<Layout size={14} />} title="Size & Position">
+            <Field label="Target Company" hint="Which company's prompt to use">
+               <select 
+                 value={cfg.company || 'woyce'} 
+                 onChange={e => update({ company: e.target.value })}
+                 style={{ 
+                   width: '100%', 
+                   border: '1.5px solid #e5e7eb', 
+                   borderRadius: 12, 
+                   padding: '10px 14px', 
+                   fontSize: 13, 
+                   background: '#fff',
+                   color: '#111827',
+                   fontWeight: '600',
+                   cursor: 'pointer',
+                   appearance: 'none',
+                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                   backgroundRepeat: 'no-repeat',
+                   backgroundPosition: 'right 12px center',
+                   backgroundSize: '16px',
+                   boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                 }}
+                >
+                  <option value="woyce">Woyce Technologies (Default)</option>
+                  <option value="cloudpeak">CloudPeak Technology (Modern AI)</option>
+               </select>
+            </Field>
             <SliderField label="Width"         value={cfg.width}   onChange={v => update({ width: v })}  min={280} max={700} unit="px" />
             <SliderField label="Height"        value={cfg.height}  onChange={v => update({ height: v })} min={300} max={900} unit="px" />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
