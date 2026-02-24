@@ -89,12 +89,28 @@ const ChatPage = () => {
         setConnectSession(session)
         setIsAgentMode(true)
         
-        // Listen for agent messages
+        // Listen for agent messages and join events
         session.onMessage((event) => {
-          if (event.data.Type === 'MESSAGE' && event.data.ParticipantRole === 'AGENT') {
+          const { Type, ContentType, ParticipantRole, Content } = event.data || {}
+
+          // Agent accepted and joined → show connected message NOW
+          if (
+            Type === 'EVENT' &&
+            ContentType === 'application/vnd.amazonaws.connect.event.participant.joined' &&
+            ParticipantRole === 'AGENT'
+          ) {
             setMessages((prev) => [
               ...prev,
-              { role: 'assistant', content: event.data.Content, isAgent: true }
+              { role: 'system', content: '✅ Connected to live agent. You can now chat with a real person.' }
+            ])
+            return
+          }
+
+          // Actual text message from agent
+          if (Type === 'MESSAGE' && ParticipantRole === 'AGENT') {
+            setMessages((prev) => [
+              ...prev,
+              { role: 'assistant', content: Content, isAgent: true }
             ])
           }
         })
@@ -121,10 +137,10 @@ const ChatPage = () => {
         session.onEnded(handleAgentEnd)
         session.onConnectionBroken(handleAgentEnd)
 
-        // Add system message
+        // Show only a "waiting" message — connected msg will come when agent joins
         setMessages((prev) => [
           ...prev,
-          { role: 'system', content: '✅ Connected to live agent. You can now chat with a real person.' }
+          { role: 'system', content: 'Please wait, connecting you to an available agent...' }
         ])
       } else {
         setMessages((prev) => [
