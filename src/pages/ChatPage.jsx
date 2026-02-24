@@ -27,11 +27,16 @@ const ChatPage = () => {
     if (threadId) sessionStorage.setItem('currentThreadId', threadId)
   }, [threadId])
 
-  const resetConversation = () => {
+  const resetConversation = async () => {
     if (abortControllerRef.current) abortControllerRef.current.abort()
+
+    // If an Amazon Connect session is active, disconnect it properly
     if (connectSession) {
-      connectSession.disconnectParticipant() // Disconnect from Amazon Connect
+      try {
+        await connectSession.disconnectParticipant()
+      } catch { /* ignore errors on disconnect */ }
     }
+
     setMessages([])
     setThreadId(null)
     setInput('')
@@ -93,7 +98,29 @@ const ChatPage = () => {
             ])
           }
         })
-        
+
+        // When agent ends/disconnects the chat → switch back to AI bot
+        const handleAgentEnd = async () => {
+          setIsAgentMode(false)
+          setConnectSession(null)
+          // Silently reset LangGraph context so bot doesn't re-transfer
+          try {
+            await fetch('http://localhost:8000/api/agent-session-ended', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ thread_id: threadId })
+            })
+          } catch { /* ignore */ }
+          setMessages((prev) => [
+            ...prev,
+            { role: 'system', content: '👋 Agent has left the chat.' },
+            { role: 'assistant', content: 'Thank you for chatting with our agent! If you have any more questions about pest control, I\'m here to help. Is there anything else I can assist you with?' }
+          ])
+        }
+
+        session.onEnded(handleAgentEnd)
+        session.onConnectionBroken(handleAgentEnd)
+
         // Add system message
         setMessages((prev) => [
           ...prev,
