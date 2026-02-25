@@ -3,9 +3,12 @@ import Header from '../components/chatbot/Header'
 import MessageList from '../components/chatbot/MessageList'
 import MessageInput from '../components/chatbot/MessageInput'
 import { getWidgetConfig } from '../hooks/useWidgetConfig'
+import 'amazon-connect-chatjs'
 
 const ChatPage = () => {
   const [threadId, setThreadId] = useState(() => sessionStorage.getItem('currentThreadId') || null)
+  const [isAgentMode, setIsAgentMode] = useState(false)
+  const [connectSession, setConnectSession] = useState(null)
 
   const [messages, setMessages] = useState(() => {
     const saved = sessionStorage.getItem('messages')
@@ -24,12 +27,22 @@ const ChatPage = () => {
     if (threadId) sessionStorage.setItem('currentThreadId', threadId)
   }, [threadId])
 
-  const resetConversation = () => {
+  const resetConversation = async () => {
     if (abortControllerRef.current) abortControllerRef.current.abort()
+
+    // If an Amazon Connect session is active, disconnect it properly
+    if (connectSession) {
+      try {
+        await connectSession.disconnectParticipant()
+      } catch { /* ignore errors on disconnect */ }
+    }
+
     setMessages([])
     setThreadId(null)
     setInput('')
     setIsLoading(false)
+    setIsAgentMode(false)
+    setConnectSession(null)
     sessionStorage.removeItem('messages')
     sessionStorage.removeItem('currentThreadId')
   }
@@ -41,6 +54,126 @@ const ChatPage = () => {
     }
   }
 
+  const handleAgentTransfer = async (transferData) => {
+    try {
+      // Get customer name from conversation or use default
+      const customerName = transferData?.name || 'Customer'
+      
+      const response = await fetch('http://localhost:8000/api/agent-transfer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          thread_id: threadId,
+          customer_name: customerName
+        })
+      })
+      
+      const result = await response.json()
+      
+      if (result.success) {
+        // Set region before creating session
+        window.connect.ChatSession.setGlobalConfig({ region: 'us-east-1' })
+
+        // Initialize Amazon Connect Chat
+        const session = window.connect.ChatSession.create({
+          chatDetails: {
+            ContactId: result.contactId,
+            ParticipantId: result.participantId,
+            ParticipantToken: result.participantToken
+          },
+          type: 'CUSTOMER'
+        })
+        
+        // Connect to the chat
+        await session.connect()
+        setConnectSession(session)
+        setIsAgentMode(true)
+        
+        // Listen for agent messages and join events
+        session.onMessage((event) => {
+          const { Type, ContentType, ParticipantRole, Content } = event.data || {}
+
+          // Agent accepted and joined → show connected message NOW
+          if (
+            Type === 'EVENT' &&
+            ContentType === 'application/vnd.amazonaws.connect.event.participant.joined' &&
+            ParticipantRole === 'AGENT'
+          ) {
+            setMessages((prev) => [
+              ...prev,
+              { role: 'system', content: '✅ Connected to live agent. You can now chat with a real person.' }
+            ])
+            return
+          }
+
+          // Actual text message from agent
+          if (Type === 'MESSAGE' && ParticipantRole === 'AGENT') {
+            setMessages((prev) => [
+              ...prev,
+              { role: 'assistant', content: Content, isAgent: true }
+            ])
+          }
+        })
+
+        // When agent ends/disconnects the chat → switch back to AI bot
+        const handleAgentEnd = async () => {
+          setIsAgentMode(false)
+          setConnectSession(null)
+          // Silently reset LangGraph context so bot doesn't re-transfer
+          try {
+            await fetch('http://localhost:8000/api/agent-session-ended', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ thread_id: threadId })
+            })
+          } catch { /* ignore */ }
+          setMessages((prev) => [
+            ...prev,
+            { role: 'system', content: '👋 Agent has left the chat.' },
+            { role: 'assistant', content: 'Thank you for chatting with our agent! If you have any more questions about pest control, I\'m here to help. Is there anything else I can assist you with?' }
+          ])
+        }
+
+        session.onEnded(handleAgentEnd)
+        session.onConnectionBroken(handleAgentEnd)
+
+        // Show only a "waiting" message — connected msg will come when agent joins
+        setMessages((prev) => [
+          ...prev,
+          { role: 'system', content: 'Please wait, connecting you to an available agent...' }
+        ])
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: '❌ ' + (result.error || 'Unable to connect to agent. Please try again later.') }
+        ])
+      }
+    } catch (error) {
+      console.error('Agent transfer error:', error)
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: '❌ Connection error: ' + (error?.message || String(error)) }
+      ])
+    }
+  }
+
+  const sendMessageToAgent = async (message) => {
+    if (!connectSession) return
+    
+    try {
+      await connectSession.sendMessage({
+        contentType: 'text/plain',
+        message: message
+      })
+    } catch (error) {
+      console.error('Error sending message to agent:', error)
+      setMessages((prev) => [
+        ...prev,
+        { role: 'system', content: '❌ Failed to send message. Connection may be lost.' }
+      ])
+    }
+  }
+
   const sendMessage = async (e) => {
     if (e) e.preventDefault()
     if (!input.trim() || isLoading) return
@@ -48,9 +181,17 @@ const ChatPage = () => {
     const userMessage = { role: 'user', content: input }
     setMessages((prev) => [...prev, userMessage])
     setInput('')
+    
+    // If in agent mode, send to Amazon Connect
+    if (isAgentMode) {
+      await sendMessageToAgent(input)
+      return
+    }
+    
     setIsLoading(true)
 
     abortControllerRef.current = new AbortController()
+    let hasStartedText = false
 
     try {
       const cfg = getWidgetConfig()
@@ -69,7 +210,6 @@ const ChatPage = () => {
       const decoder = new TextDecoder()
       let botResponse = ''
       let displayedLength = 0
-      let hasStartedText = false
 
       while (true) {
         const { done, value } = await reader.read()
@@ -124,7 +264,12 @@ const ChatPage = () => {
                   }
                 }
               }
-            } catch (e) {
+              
+              // Check for agent transfer request
+              if (data.agent_transfer) {
+                await handleAgentTransfer(data.transfer_data)
+              }
+            } catch {
               // Ignore partial JSON
             }
           }
